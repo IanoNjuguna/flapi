@@ -40,48 +40,55 @@ define([], function(){
   };
   
   PipeManager.prototype.drawGravestone = function(ctx, x, y, isTop){
-    var w = 50, h = 80;
+    var w = 50, h = isTop ? y : 800; // Extend to edge like Flappy Bird pipes
     ctx.save();
-    ctx.translate(x, y);
-    if (isTop) ctx.translate(0, -h);
+    ctx.translate(x, isTop ? 0 : y);
     
-    // Stone base
+    // Stone base (tall pipe)
     ctx.fillStyle = "#3a3a42";
     ctx.strokeStyle = "#1a1a1a";
     ctx.lineWidth = 2;
+    ctx.fillRect(-w/2, 0, w, h);
+    ctx.strokeRect(-w/2, 0, w, h);
+    
+    // Rounded tombstone cap at the end
+    var capY = h - 50;
     ctx.beginPath();
-    ctx.moveTo(-w/2, 0);
+    ctx.moveTo(-w/2, capY);
     ctx.lineTo(-w/2, h - 15);
     ctx.arcTo(-w/2, h, 0, h, 15);
     ctx.arcTo(w/2, h, w/2, h - 15, 15);
-    ctx.lineTo(w/2, 0);
+    ctx.lineTo(w/2, capY);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
     
-    // Cracks
+    // Multiple cracks along the tall pipe
     ctx.strokeStyle = "#2a2a2a";
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(-w/3, h/3);
-    ctx.lineTo(-w/4, h/2);
-    ctx.moveTo(w/4, h/4);
-    ctx.lineTo(w/3, h/2);
-    ctx.stroke();
+    for (var c = 0; c < Math.floor(h / 100); c++) {
+      var crackY = c * 100 + 30;
+      ctx.beginPath();
+      ctx.moveTo(-w/3, crackY);
+      ctx.lineTo(-w/4, crackY + 20);
+      ctx.moveTo(w/4, crackY + 10);
+      ctx.lineTo(w/3, crackY + 30);
+      ctx.stroke();
+    }
     
-    // RIP text
+    // RIP text on cap
     ctx.fillStyle = "#8a7a7a";
     ctx.font = "bold 12px serif";
     ctx.textAlign = "center";
-    ctx.fillText("R.I.P", 0, h/2);
+    ctx.fillText("R.I.P", 0, h - 25);
     
-    // Blood drips
+    // Blood drips on cap
     ctx.strokeStyle = "#8b0000";
     ctx.lineWidth = 2;
     var drips = [
-      {x: -w/4, y: h/2 + 5, len: 8},
-      {x: w/4, y: h/2 + 3, len: 12},
-      {x: 0, y: h/2 + 8, len: 6}
+      {x: -w/4, y: h - 20, len: 8},
+      {x: w/4, y: h - 22, len: 12},
+      {x: 0, y: h - 18, len: 6}
     ];
     for (var i = 0; i < drips.length; i++) {
       ctx.beginPath();
@@ -99,44 +106,50 @@ define([], function(){
   };
   
   PipeManager.prototype.drawCross = function(ctx, x, y, isTop){
-    var w = 30, h = 80;
+    var w = 40, h = isTop ? y : 800; // Extend to edge like pipes
     ctx.save();
-    ctx.translate(x, y);
-    if (!isTop) { ctx.rotate(Math.PI); ctx.translate(0, -h); }
+    ctx.translate(x, isTop ? 0 : y);
+    if (!isTop) { ctx.rotate(Math.PI); }
     
-    // Vertical beam
+    // Tall vertical beam (pipe-like)
     ctx.fillStyle = "#2a1a1a";
     ctx.strokeStyle = "#1a0a0a";
     ctx.lineWidth = 2;
     ctx.fillRect(-w/6, 0, w/3, h);
     ctx.strokeRect(-w/6, 0, w/3, h);
     
-    // Horizontal beam (lower for upside down effect)
-    ctx.fillRect(-w/2, h * 0.65, w, w/3);
-    ctx.strokeRect(-w/2, h * 0.65, w, w/3);
+    // Horizontal beam at the end (creates cross shape at bottom/top)
+    var crossY = h - 50;
+    ctx.fillRect(-w/2, crossY, w, w/3);
+    ctx.strokeRect(-w/2, crossY, w, w/3);
     
-    // Blood splatter on cross
+    // Blood splatter along the pipe
     ctx.fillStyle = "#8b0000";
-    for (var i = 0; i < 5; i++) {
-      var bx = (Math.random() - 0.5) * w * 0.6;
-      var by = h * 0.3 + Math.random() * h * 0.4;
-      var br = Math.random() * 2 + 1;
-      ctx.beginPath();
-      ctx.arc(bx, by, br, 0, Math.PI * 2);
-      ctx.fill();
+    for (var s = 0; s < Math.floor(h / 80); s++) {
+      for (var i = 0; i < 3; i++) {
+        var bx = (Math.random() - 0.5) * w * 0.4;
+        var by = s * 80 + Math.random() * 60;
+        var br = Math.random() * 2 + 1;
+        ctx.beginPath();
+        ctx.arc(bx, by, br, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     
-    // Dripping blood
+    // Dripping blood on cross beam
     ctx.strokeStyle = "#8b0000";
     ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, h * 0.8);
-    ctx.lineTo(0, h * 0.95);
-    ctx.stroke();
-    ctx.fillStyle = "#8b0000";
-    ctx.beginPath();
-    ctx.arc(0, h * 0.95, 2, 0, Math.PI * 2);
-    ctx.fill();
+    for (var d = 0; d < 3; d++) {
+      var dx = (d - 1) * w/4;
+      ctx.beginPath();
+      ctx.moveTo(dx, crossY + w/3);
+      ctx.lineTo(dx, crossY + w/3 + 15);
+      ctx.stroke();
+      ctx.fillStyle = "#8b0000";
+      ctx.beginPath();
+      ctx.arc(dx, crossY + w/3 + 15, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     
     ctx.restore();
   };

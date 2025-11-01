@@ -12,9 +12,9 @@ A dark vampire-themed Flappy Bird clone with creepy ambience, featuring a menaci
 
 ## Theme & Features
 
-- **Vampire Aesthetic**: Dark purple night sky, moon dripping green goo, bloody ground, fog layers
-- **Player**: Creepy vampire crow with animated wings, menacing red glowing eyes, and sharp talons
-- **Obstacles**: Alternating bloody gravestones (with R.I.P.) and upside-down crosses with blood drips
+- **Halloween Aesthetic**: Dark purple night sky with glowing stars, moon oozing toxic green acid, bubbling green acid ground, purple fog layers
+- **Player**: Glowing jack o' lantern pumpkin with triangular eyes, nose, and a jagged toothy grin. Features subtle bobbing animation and orange glow aura
+- **Obstacles**: Tall pipe-style bloody gravestones (with R.I.P. tombstone caps) and upside-down crosses extending from top and bottom, inspired by Flappy Bird's classic design
 - **Audio**: 
   - Continuous creepy ambient drone (low-frequency rumble)
   - Periodic owl hooting (every 8-15 seconds)

@@ -132,23 +132,43 @@ define([
       this.pipes.draw(ctx);
       this.player.draw(ctx);
       
-      // Bloody ground
-      ctx.fillStyle = "#1a0a0a";
+      // Green acid ground
+      ctx.fillStyle = "#0d1a0a";
       ctx.fillRect(0, h - 30, w, 30);
-      ctx.strokeStyle = "#4a0000";
+      
+      // Toxic green acid glow on top
+      var acidGrad = ctx.createLinearGradient(0, h - 30, 0, h - 20);
+      acidGrad.addColorStop(0, "rgba(50, 255, 100, 0.6)");
+      acidGrad.addColorStop(1, "rgba(50, 255, 100, 0)");
+      ctx.fillStyle = acidGrad;
+      ctx.fillRect(0, h - 30, w, 10);
+      
+      ctx.strokeStyle = "#32ff64";
       ctx.lineWidth = 3;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "rgba(50, 255, 100, 0.8)";
       ctx.beginPath();
       ctx.moveTo(0, h - 30);
       ctx.lineTo(w, h - 30);
       ctx.stroke();
+      ctx.shadowBlur = 0;
       
-      // Blood puddles on ground
-      ctx.fillStyle = "rgba(139, 0, 0, 0.4)";
+      // Bubbling acid pools
+      ctx.fillStyle = "rgba(50, 255, 100, 0.5)";
       for (var bp = 0; bp < 5; bp++) {
         var bpX = (bp * 80 + t * 0.05) % w;
+        var bubble = Math.sin(t * 0.003 + bp) * 2;
         ctx.beginPath();
-        ctx.ellipse(bpX, h - 15, 15, 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(bpX, h - 15 + bubble, 15, 5, 0, 0, Math.PI * 2);
         ctx.fill();
+        
+        // Acid bubbles rising
+        if (Math.random() > 0.97) {
+          ctx.fillStyle = "rgba(50, 255, 100, 0.7)";
+          ctx.beginPath();
+          ctx.arc(bpX + Math.random() * 10 - 5, h - 25, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     }
   });
