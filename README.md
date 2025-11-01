@@ -14,8 +14,8 @@ You are a menacing Jack o' Lantern with glowing red eyes navigating through bloo
 
 - **Halloween Aesthetic**: Dark purple night sky with glowing stars, moon oozing toxic green acid, **glowing red lava floor with bubbling hot pools**, purple fog layers
 - **Player**: Glowing jack o' lantern pumpkin with triangular eyes, nose, and a jagged toothy grin. Features subtle bobbing animation and orange glow aura
-  - **Life system**: Start with 1 life. Collect hearts every 3 obstacles to gain extra lives
-  - **Heart power-ups**: Pulsing red hearts appear in the middle of the screen every 3 obstacles
+  - **Life system**: Start with 1 life. Collect hearts every 7 obstacles to gain extra lives
+  - **Heart power-ups**: Pulsing red hearts appear in the middle of the screen every 7 obstacles
   - **Lava death**: If the jack o' lantern touches the lava floor, it burns to a char with flames engulfing it, fading eyes, and rising smoke
 - **Obstacles**: Tall Flappy Bird-style pipe obstacles extending from top and bottom
   - **Glowing tombstones**: All tombstones glow lime green with animated dripping acid goo, glowing cracks, "TOXIC" text, and acid puddles

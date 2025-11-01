@@ -34,8 +34,8 @@ define([
         this.audio.playMilestone();
       }
       
-      // Spawn heart every 3 obstacles
-      if (this.obstaclesPassed % 3 === 0) {
+      // Spawn heart every 7 obstacles
+      if (this.obstaclesPassed % 7 === 0) {
         this.spawnHeart();
       }
     },
@@ -217,6 +217,19 @@ define([
         ctx.arc(drips[d].x, moonY + moonR + drips[d].len, 3, 0, Math.PI * 2);
         ctx.fill();
       }
+      
+      // Fog layers
+      ctx.fillStyle = "rgba(80, 50, 100, 0.15)";
+      ctx.beginPath();
+      for (var f = 0; f < w; f += 30) {
+        var fogY = h * 0.7 + Math.sin(f * 0.05 + t * 0.0005) * 20;
+        if (f === 0) ctx.moveTo(f, fogY);
+        else ctx.lineTo(f, fogY);
+      }
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fill();
       
       this.pipes.draw(ctx);
       
