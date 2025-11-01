@@ -3,6 +3,7 @@ define([], function(){
     this.ctx = null;
     this.sounds = {};
     this.ambientNode = null;
+    this.soundtrackNode = null;
     this.owlTimer = 0;
     this.owlInterval = 8000 + Math.random() * 7000; // 8-15 seconds between owl sounds
     this.milestone10Played = false;
@@ -28,6 +29,7 @@ define([], function(){
     this.sounds.death = this.createDeathSound();
     this.sounds.milestone = this.createMilestoneSound();
     this.sounds.owl = this.createOwlSound();
+    this.sounds.burn = this.createBurnSound();
   };
   
   AudioManager.prototype.createFlapSound = function(){
@@ -135,6 +137,56 @@ define([], function(){
     };
   };
   
+  AudioManager.prototype.createBurnSound = function(){
+    // Horrifying burning sound - crackling fire with scream-like tones
+    return function(ctx){
+      // Fire crackling (noise + filter)
+      var bufferSize = ctx.sampleRate * 1.5;
+      var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      var data = buffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+      }
+      var noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      var noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = 2000;
+      noiseFilter.Q.value = 0.5;
+      var noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.15, ctx.currentTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noise.start(ctx.currentTime);
+      
+      // Horrifying scream-like descending tone
+      var osc1 = ctx.createOscillator();
+      var osc2 = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc1.type = 'sawtooth';
+      osc2.type = 'square';
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc1.frequency.setValueAtTime(600, ctx.currentTime);
+      osc1.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.8);
+      osc2.frequency.setValueAtTime(800, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.8);
+      
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
+      
+      osc1.start(ctx.currentTime);
+      osc2.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 1.2);
+      osc2.stop(ctx.currentTime + 1.2);
+    };
+  };
+  
   AudioManager.prototype.startAmbience = function(){
     if (!this.ctx) return;
     
@@ -173,6 +225,57 @@ define([], function(){
     lfo.connect(lfoGain);
     lfoGain.connect(filter.frequency);
     lfo.start();
+    
+    // Start creepy soundtrack
+    this.startSoundtrack();
+  };
+  
+  AudioManager.prototype.startSoundtrack = function(){
+    if (!this.ctx) return;
+    
+    // Creepy minor key melody looping
+    var masterGain = this.ctx.createGain();
+    masterGain.gain.value = 0.18; // Louder for better atmosphere
+    masterGain.connect(this.ctx.destination);
+    this.soundtrackNode = masterGain;
+    
+    // Melody notes in minor key (D minor pentatonic)
+    var melody = [293.66, 349.23, 392, 440, 523.25]; // D, F, G, A, C
+    var beatDuration = 0.6;
+    var pattern = [0, 2, 1, 3, 2, 4, 2, 1]; // Eerie descending-ascending pattern
+    
+    var playNote = function(freq, time, duration){
+      var osc = this.ctx.createOscillator();
+      var gain = this.ctx.createGain();
+      var filter = this.ctx.createBiquadFilter();
+      
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      filter.type = 'lowpass';
+      filter.frequency.value = 800;
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(0.3, time + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+      
+      osc.start(time);
+      osc.stop(time + duration);
+    }.bind(this);
+    
+    var loopMelody = function(){
+      var startTime = this.ctx.currentTime;
+      for (var i = 0; i < pattern.length; i++) {
+        var noteTime = startTime + i * beatDuration;
+        playNote(melody[pattern[i]], noteTime, beatDuration * 0.8);
+      }
+      setTimeout(loopMelody, pattern.length * beatDuration * 1000);
+    }.bind(this);
+    
+    loopMelody();
   };
   
   AudioManager.prototype.update = function(dt){
@@ -209,6 +312,12 @@ define([], function(){
   AudioManager.prototype.playOwl = function(){
     if (this.ctx && this.sounds.owl) {
       this.sounds.owl(this.ctx);
+    }
+  };
+  
+  AudioManager.prototype.playBurn = function(){
+    if (this.ctx && this.sounds.burn) {
+      this.sounds.burn(this.ctx);
     }
   };
   

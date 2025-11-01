@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Flappy Haunt</title>
+  <title>Flappy Haunt 🎃</title>
   <link rel="stylesheet" href="./css/styles.css" />
   <link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>
   <script>
@@ -19,18 +19,26 @@
 </head>
 <body>
   <div id="app">
-    <div id="hud" class="hud">
-      <div id="score" class="score">0</div>
-      <div id="best" class="best">Best: 0</div>
-      <button id="btnPlay" class="btn primary">Play</button>
-      <button id="btnPause" class="btn">Pause</button>
-      <button id="btnRestart" class="btn">Restart</button>
-      <button id="btnConnect" class="btn accent">Connect</button>
-    </div>
-    <canvas id="game" width="360" height="640" aria-label="Flappy Haunt game canvas"></canvas>
-    <div id="overlay" class="overlay hidden">
-      <div class="panel">
-        <h1>Flappy Haunt</h1>
+    <div style="position:relative">
+      <canvas id="game" width="360" height="640" aria-label="Flappy Haunt game canvas"></canvas>
+      <div class="hud">
+        <div class="score" id="score">0</div>
+        <div class="best" id="best">Best: 0</div>
+        <button class="btn primary" id="btnPlay">Play</button>
+        <button class="btn" id="btnPause">Pause</button>
+        <button class="btn" id="btnRestart">Restart</button>
+        <button class="btn wallet-btn" id="walletBtn">Connect Wallet</button>
+      </div>
+      <div class="overlay hidden" id="overlay">
+        <div class="panel">
+          <h1>Flappy Haunt</h1>
+          <p>Tap or press Space/Up to flap.</p>
+          <p class="small">Connect to save your high score on Starknet Sepolia.</p>
+          <p id="overlayText">Game Over</p>
+          <p id="nftMessage" style="display:none; color:#32ff64; margin:10px 0; font-size:14px;"></p>
+          <button class="btn primary" id="restart">Play Again</button>
+          <button class="btn accent" id="mintBtn" style="display:none; margin-top:10px;">Mint NFT 🎃</button>
+        </div>
         <p>Tap or press Space/Up to flap.</p>
         <p class="small">Connect to save your high score on Starknet Sepolia.</p>
       </div>

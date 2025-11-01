@@ -12,17 +12,25 @@ You are a menacing Jack o' Lantern with glowing red eyes navigating through bloo
 
 ## Theme & Features
 
-- **Halloween Aesthetic**: Dark purple night sky with glowing stars, moon oozing toxic green acid, bubbling green acid ground, purple fog layers
+- **Halloween Aesthetic**: Dark purple night sky with glowing stars, moon oozing toxic green acid, **glowing red lava floor with bubbling hot pools**, purple fog layers
 - **Player**: Glowing jack o' lantern pumpkin with triangular eyes, nose, and a jagged toothy grin. Features subtle bobbing animation and orange glow aura
+  - **Lava death**: If the jack o' lantern touches the lava floor, it burns to a char with flames engulfing it, fading eyes, and rising smoke
 - **Obstacles**: Two types of tall Flappy Bird-style pipe obstacles extending from top and bottom
   - **Bloody gravestones**: Gray stone pipes with blood drips, cracks, and R.I.P. tombstone caps
   - **Toxic tombstones**: Glowing lime green tombstones with animated dripping acid goo, glowing cracks, "TOXIC" text, and acid puddles
 - **Audio**: 
-  - Continuous creepy ambient drone (low-frequency rumble)
+  - **Creepy soundtrack**: Looping minor key melody playing throughout (D minor pentatonic) - enhanced volume for atmosphere
+  - Continuous creepy ambient drone (low-frequency rumble with LFO modulation)
   - Periodic owl hooting (every 8-15 seconds)
+  - Horrifying burn sound (fire crackling with scream-like descending tones)
   - Unique death sound (dramatic descending tone)
   - Special milestone sound when reaching score of 10 (triumphant bells)
-- **Physics**: Smooth flapping, deterministic collision detection, progressive difficulty
+- **Physics**: Lighter gravity (650) for floatier gameplay, smooth flapping, deterministic collision detection, progressive difficulty, lava floor instant burn
+- **Web3 Integration**: 
+  - **Starknet wallet connection** via Cartridge Controller on Sepolia testnet
+  - **NFT minting**: Mint your high scores (10+) as spooky NFTs on Starknet
+  - Session policies for gasless transactions
+  - Wallet status display in HUD
 
 ## Tech
 
@@ -31,12 +39,40 @@ You are a menacing Jack o' Lantern with glowing red eyes navigating through bloo
 - Web Audio API for procedural sound generation (no audio files needed)
 - Cartridge Controller for on-chain scores (Starknet Sepolia)
 
-## Configure Starknet (Cartridge)
+## Web3 Integration (Starknet)
 
-- The adapter lazy-loads `@cartridge/controller` and `starknet` from unpkg and sets network to Sepolia using:
-  - `chains: [{ rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia" }]`
-  - `defaultChainId: constants.StarknetChainId.SN_SEPOLIA`
-- Score submission wiring is added in the Web3 milestone. Provide your leaderboard contract address/ABI and permitted `entrypoint` (e.g., `submit_score`) in session policies.
+### Wallet Connection
+- Click "Connect Wallet" button in HUD to connect via Cartridge Controller
+- Supports Starknet Sepolia testnet
+- Wallet address displayed once connected (shortened format)
+- Connection persists during game session
+
+### NFT Minting
+- **Eligibility**: Score 10 or higher to unlock NFT minting
+- **Process**: 
+  1. Achieve a score of 10+
+  2. Ensure wallet is connected
+  3. Click "Mint NFT 🎃" button on game over screen
+  4. Transaction automatically executes with session policies
+  5. Receive confirmation with transaction hash
+- **NFT Data**: 
+  - Recipient address
+  - Final score (u256)
+  - Timestamp (u64)
+- **Contract**: Update `NFT_CONTRACT_ADDRESS` in `CartridgeControllerAdapter.js` with your deployed contract
+
+### Configuration
+- Lazy-loads `@cartridge/controller` and `starknet` from unpkg
+- Network: Starknet Sepolia
+  - RPC: `https://api.cartridge.gg/x/starknet/sepolia`
+  - Chain ID: `SN_SEPOLIA`
+- Session policies configured for `mint_score_nft` entrypoint
+
+### Deploy Your Own NFT Contract
+```cairo
+// Example entrypoint signature
+fn mint_score_nft(recipient: ContractAddress, score: u256, timestamp: u64)
+```
 
 ## Development Plan
 

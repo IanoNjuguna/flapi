@@ -5,6 +5,8 @@ define([
     constructor: function(canvas, ctx, config, hud){
       this.canvas = canvas; this.ctx = ctx; this.cfg = config; this.hud = hud;
       this.audio = new AudioManager();
+      this.burning = false;
+      this.burnProgress = 0;
       this.reset();
     },
     reset: function(){
@@ -14,6 +16,8 @@ define([
       this.pipes = new PipeManager(this.canvas.width, this.canvas.height, this.cfg.pipes, lang.hitch(this, this.onPass));
       this.hud.setScore(0); this.hud.setBest(this.best);
       this.audio.reset();
+      this.burning = false;
+      this.burnProgress = 0;
     },
     onPass: function(){ 
       this.score++; 
@@ -30,16 +34,43 @@ define([
       while(this.time.acc >= step){ this.update(step); this.time.acc -= step; }
       this.render(); requestAnimationFrame(this.loop.bind(this)); },
     update: function(dt){
+      if (this.burning) {
+        this.burnProgress += dt * 2;
+        if (this.burnProgress >= 1) {
+          this.gameOver();
+        }
+        return;
+      }
+      
       this.player.update(dt, this.canvas.height);
       this.pipes.update(dt, this.cfg.pipes.speed);
       this.audio.update(dt);
+      
+      // Check lava floor collision
+      if (this.player.y >= this.canvas.height - 30 - this.player.r) {
+        this.startBurning();
+      }
+      
       if(this.pipes.collides(this.player.getAABB())){ this.gameOver(); }
+    },
+    startBurning: function(){
+      if (!this.burning) {
+        this.burning = true;
+        this.burnProgress = 0;
+        this.running = false;
+        this.audio.playBurn();
+      }
     },
     gameOver: function(){
       this.running=false; 
       this.audio.playDeath();
       if(this.score>this.best){ this.best=this.score; localStorage.setItem('best', String(this.best)); this.hud.setBest(this.best,true); }
       this.hud.flashGameOver(this.score, this.best);
+      
+      // Trigger callback if set (for NFT minting integration)
+      if(this.onGameOver){
+        this.onGameOver(this.score);
+      }
     },
     render: function(){ 
       var ctx=this.ctx; 
@@ -130,46 +161,150 @@ define([
       ctx.fill();
       
       this.pipes.draw(ctx);
-      this.player.draw(ctx);
       
-      // Green acid ground
-      ctx.fillStyle = "#0d1a0a";
+      if (this.burning) {
+        this.drawBurningPlayer(ctx);
+      } else {
+        this.player.draw(ctx);
+      }
+      
+      // Glowing red lava floor
+      ctx.fillStyle = "#1a0a0a";
       ctx.fillRect(0, h - 30, w, 30);
       
-      // Toxic green acid glow on top
-      var acidGrad = ctx.createLinearGradient(0, h - 30, 0, h - 20);
-      acidGrad.addColorStop(0, "rgba(50, 255, 100, 0.6)");
-      acidGrad.addColorStop(1, "rgba(50, 255, 100, 0)");
-      ctx.fillStyle = acidGrad;
-      ctx.fillRect(0, h - 30, w, 10);
+      // Lava glow gradient on top
+      var lavaGrad = ctx.createLinearGradient(0, h - 30, 0, h - 15);
+      lavaGrad.addColorStop(0, "rgba(255, 80, 0, 0.8)");
+      lavaGrad.addColorStop(0.5, "rgba(255, 120, 0, 0.4)");
+      lavaGrad.addColorStop(1, "rgba(255, 0, 0, 0)");
+      ctx.fillStyle = lavaGrad;
+      ctx.fillRect(0, h - 30, w, 15);
       
-      ctx.strokeStyle = "#32ff64";
+      // Glowing lava surface line
+      ctx.strokeStyle = "#ff5500";
       ctx.lineWidth = 3;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = "rgba(50, 255, 100, 0.8)";
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = "rgba(255, 80, 0, 0.9)";
       ctx.beginPath();
       ctx.moveTo(0, h - 30);
       ctx.lineTo(w, h - 30);
       ctx.stroke();
       ctx.shadowBlur = 0;
       
-      // Bubbling acid pools
-      ctx.fillStyle = "rgba(50, 255, 100, 0.5)";
+      // Bubbling lava pools with glow
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "rgba(255, 80, 0, 0.7)";
       for (var bp = 0; bp < 5; bp++) {
         var bpX = (bp * 80 + t * 0.05) % w;
         var bubble = Math.sin(t * 0.003 + bp) * 2;
+        
+        // Main lava pool
+        ctx.fillStyle = "rgba(255, 80, 0, 0.6)";
         ctx.beginPath();
         ctx.ellipse(bpX, h - 15 + bubble, 15, 5, 0, 0, Math.PI * 2);
         ctx.fill();
         
-        // Acid bubbles rising
-        if (Math.random() > 0.97) {
-          ctx.fillStyle = "rgba(50, 255, 100, 0.7)";
+        // Hot spots
+        ctx.fillStyle = "rgba(255, 200, 0, 0.8)";
+        ctx.beginPath();
+        ctx.ellipse(bpX, h - 15 + bubble, 8, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Lava bubbles rising
+        if (Math.random() > 0.96) {
+          ctx.fillStyle = "rgba(255, 100, 0, 0.9)";
           ctx.beginPath();
-          ctx.arc(bpX + Math.random() * 10 - 5, h - 25, 2, 0, Math.PI * 2);
+          ctx.arc(bpX + Math.random() * 10 - 5, h - 25, 2.5, 0, Math.PI * 2);
           ctx.fill();
         }
       }
+      ctx.shadowBlur = 0;
+    },
+    drawBurningPlayer: function(ctx){
+      var x = this.player.x;
+      var y = this.player.y;
+      var r = this.player.r;
+      var progress = this.burnProgress;
+      
+      ctx.save();
+      ctx.translate(x, y);
+      
+      // Flames engulfing the pumpkin
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = "rgba(255, 80, 0, 0.9)";
+      
+      for (var i = 0; i < 8; i++) {
+        var angle = (i / 8) * Math.PI * 2;
+        var flameH = (Math.sin(Date.now() * 0.01 + i) * 10 + 15) * (1 - progress * 0.5);
+        var fx = Math.cos(angle) * r;
+        var fy = Math.sin(angle) * r;
+        
+        var flameGrad = ctx.createLinearGradient(fx, fy, fx, fy - flameH);
+        flameGrad.addColorStop(0, "rgba(255, 80, 0, 0.9)");
+        flameGrad.addColorStop(0.5, "rgba(255, 150, 0, 0.7)");
+        flameGrad.addColorStop(1, "rgba(255, 200, 0, 0)");
+        ctx.fillStyle = flameGrad;
+        
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(fx - 5, fy - flameH);
+        ctx.lineTo(fx + 5, fy - flameH);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+      
+      // Charred pumpkin
+      var charAmount = Math.min(progress, 1);
+      var pumpkinColor = this.lerpColor([255, 140, 66], [30, 20, 20], charAmount);
+      ctx.fillStyle = "rgb(" + pumpkinColor[0] + "," + pumpkinColor[1] + "," + pumpkinColor[2] + ")";
+      ctx.strokeStyle = "rgba(0, 0, 0, " + (0.5 + charAmount * 0.5) + ")";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, r * 1.1, r, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Fading eyes glow
+      if (progress < 0.7) {
+        ctx.fillStyle = "rgba(255, 200, 0, " + (1 - progress * 1.4) + ")";
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "rgba(255, 200, 0, " + (0.5 - progress * 0.7) + ")";
+        // Left eye
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.5, -r * 0.25);
+        ctx.lineTo(-r * 0.25, -r * 0.5);
+        ctx.lineTo(-r * 0.15, -r * 0.25);
+        ctx.closePath();
+        ctx.fill();
+        // Right eye
+        ctx.beginPath();
+        ctx.moveTo(r * 0.15, -r * 0.25);
+        ctx.lineTo(r * 0.25, -r * 0.5);
+        ctx.lineTo(r * 0.5, -r * 0.25);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      
+      // Smoke particles rising
+      ctx.fillStyle = "rgba(50, 50, 50, " + (0.6 - progress * 0.3) + ")";
+      for (var s = 0; s < 5; s++) {
+        var smokeY = -r - progress * 30 - s * 8;
+        var smokeX = (Math.sin(Date.now() * 0.002 + s) * 5);
+        ctx.beginPath();
+        ctx.arc(smokeX, smokeY, 3 + s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.restore();
+    },
+    lerpColor: function(c1, c2, t){
+      return [
+        Math.floor(c1[0] + (c2[0] - c1[0]) * t),
+        Math.floor(c1[1] + (c2[1] - c1[1]) * t),
+        Math.floor(c1[2] + (c2[2] - c1[2]) * t)
+      ];
     }
   });
   return GameEngine;
